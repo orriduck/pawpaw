@@ -9,7 +9,7 @@ struct RecorderView: View {
   @State private var selectedType: ActivityType = .pee
   @State private var currentTime = Date()
   @State private var note: String = ""
-  @State private var startTime = Date().addingTimeInterval(-600)  // Default 10 mins ago
+  @State private var startTime = Date().addingTimeInterval(-60)  // Start with 1 min for pee
   @State private var endTime = Date()
   let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -27,48 +27,71 @@ struct RecorderView: View {
           // Scrollable content
           ScrollView {
             VStack(spacing: 20) {
+              // Header
+              HStack {
+                Text("Record Activity")
+                  .font(.system(size: 34, weight: .bold, design: .rounded))
+                  .foregroundStyle(.primary)
+                Spacer()
+              }
+              .padding(.horizontal)
+              .padding(.top, 20)
+
               // Activity Selector in Glass Card
               GlassContainer {
-                ScrollView(.horizontal, showsIndicators: false) {
-                  HStack(spacing: 0) {  // Spacing handled by frame padding
-                    ForEach(ActivityType.allCases) { type in
-                      VStack(spacing: 8) {
-                        ZStack {
-                          Circle()
-                            .fill(.ultraThinMaterial)
-                            .frame(width: 70, height: 70)
-                            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                            .overlay(
-                              Circle()
-                                .stroke(
-                                  selectedType == type ? Color.accentColor : Color.clear,
-                                  lineWidth: 2.5)
-                            )
+                ScrollViewReader { proxy in
+                  ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 0) {  // Spacing handled by frame padding
+                      ForEach(ActivityType.allCases) { type in
+                        VStack(spacing: 8) {
+                          ZStack {
+                            Circle()
+                              .fill(.ultraThinMaterial)
+                              .frame(width: 70, height: 70)
+                              .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                              .overlay(
+                                Circle()
+                                  .stroke(
+                                    selectedType == type ? Color.accentColor : Color.clear,
+                                    lineWidth: 2.5)
+                              )
 
-                          Image(systemName: type.icon)
-                            .font(.system(size: 30))
-                            .foregroundStyle(.tint)
+                            Image(systemName: type.icon)
+                              .font(.system(size: 30))
+                              .foregroundStyle(.tint)
+                          }
+
+                          Text(type.rawValue)
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundStyle(selectedType == type ? .primary : .secondary)
                         }
-
-                        Text(type.rawValue)
-                          .font(.system(size: 14, weight: .bold, design: .rounded))
-                          .foregroundStyle(selectedType == type ? .primary : .secondary)
+                        .frame(width: 90)  // Fixed smaller width for tighter spacing
+                        .scaleEffect(selectedType == type ? 1.05 : 1.0)
+                        .animation(
+                          .spring(response: 0.4, dampingFraction: 0.7), value: selectedType
+                        )
+                        .onTapGesture {
+                          withAnimation {
+                            selectedType = type
+                          }
+                        }
+                        .id(type)
                       }
-                      .frame(width: 90)  // Fixed smaller width for tighter spacing
-                      .scaleEffect(selectedType == type ? 1.05 : 1.0)
-                      .animation(.spring(response: 0.4, dampingFraction: 0.7), value: selectedType)
-                      .onTapGesture {
-                        withAnimation {
-                          selectedType = type
-                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .scrollTargetLayout()
+                  }
+                  .scrollTargetBehavior(.viewAligned)
+                  .onAppear {
+                    // Scroll to pee icon with center anchor for better initial positioning
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                      withAnimation {
+                        proxy.scrollTo(ActivityType.pee, anchor: .center)
                       }
                     }
                   }
-                  .padding(.horizontal, 16)
-                  .padding(.vertical, 12)
-                  .scrollTargetLayout()
                 }
-                .scrollTargetBehavior(.viewAligned)
               }
               .padding(.horizontal, 16)
               .padding(.top, 20)
@@ -78,6 +101,10 @@ struct RecorderView: View {
                 Text("Duration")
                   .font(.headline)
                   .foregroundStyle(.primary)
+
+                Text("Changing duration will adjust the start time")
+                  .font(.subheadline)
+                  .foregroundStyle(.secondary)
 
                 // Quick duration buttons
                 HStack(spacing: 12) {
@@ -154,35 +181,38 @@ struct RecorderView: View {
 
           // Fixed bottom section
           VStack(spacing: 0) {
-            // Confirm Button
-            Button {
-              saveActivity(screenHeight: geometry.size.height)
-            } label: {
-              Text("Confirm Record")
-                .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
-                .background(.tint)
-                .clipShape(RoundedRectangle(cornerRadius: 24))
-                .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+            // Action Buttons
+            HStack(spacing: 12) {
+              // Cancel Button
+              Button {
+                cancelActivity(screenHeight: geometry.size.height)
+              } label: {
+                Text("Cancel")
+                  .font(.system(size: 20, weight: .bold, design: .rounded))
+                  .foregroundStyle(.primary)
+                  .frame(maxWidth: .infinity)
+                  .padding(.vertical, 18)
+                  .background(.ultraThinMaterial)
+                  .clipShape(RoundedRectangle(cornerRadius: 20))
+                  .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+              }
+
+              // Confirm Button
+              Button {
+                saveActivity(screenHeight: geometry.size.height)
+              } label: {
+                Text("Confirm")
+                  .font(.system(size: 20, weight: .bold, design: .rounded))
+                  .foregroundStyle(.white)
+                  .frame(maxWidth: .infinity)
+                  .padding(.vertical, 18)
+                  .background(.tint)
+                  .clipShape(RoundedRectangle(cornerRadius: 20))
+                  .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+              }
             }
             .padding(.horizontal, 16)
-
-            // Swipe Down Hint
-            VStack(spacing: 4) {
-              Image(systemName: "chevron.down")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .opacity(0.6)
-
-              Text("Swipe down to cancel")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .opacity(0.6)
-            }
-            .padding(.vertical, 8)
-            .padding(.bottom, 10)  // Extra bottom padding
+            .padding(.bottom, 20)
           }
           .background(Color(UIColor.systemBackground))
         }
@@ -222,9 +252,31 @@ struct RecorderView: View {
     }
   }
 
+  private func defaultDuration(for type: ActivityType) -> Int {
+    switch type {
+    case .pee, .poo:
+      return 1
+    case .eat:
+      return 15
+    case .play:
+      return 30
+    default:
+      return 10
+    }
+  }
+
   private func setQuickDuration(minutes: Int) {
-    endTime = Date()
     startTime = endTime.addingTimeInterval(-Double(minutes * 60))
+  }
+
+  private func cancelActivity(screenHeight: CGFloat) {
+    // Animate out and dismiss without saving
+    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+      offset = screenHeight
+    }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+      showMainTab = true
+    }
   }
 
   private func saveActivity(screenHeight: CGFloat) {
@@ -248,4 +300,3 @@ struct RecorderView: View {
   RecorderView(showMainTab: .constant(false))
     .modelContainer(for: Activity.self, inMemory: true)
 }
-
