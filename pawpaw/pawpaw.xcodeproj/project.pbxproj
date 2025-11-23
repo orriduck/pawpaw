@@ -6,6 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXCopyFilesBuildPhase section */
+		7F631B7B2ED37E670097DA29 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		7F631AF52ED2398F0097DA29 /* pawpaw.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = pawpaw.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -33,6 +46,7 @@
 			isa = PBXGroup;
 			children = (
 				7F631AF72ED2398F0097DA29 /* pawpaw */,
+				7F631B292ED37DE70097DA29 /* Frameworks */,
 				7F631AF62ED2398F0097DA29 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -45,6 +59,13 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		7F631B292ED37DE70097DA29 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -55,6 +76,7 @@
 				7F631AF12ED2398F0097DA29 /* Sources */,
 				7F631AF22ED2398F0097DA29 /* Frameworks */,
 				7F631AF32ED2398F0097DA29 /* Resources */,
+				7F631B7B2ED37E670097DA29 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -251,6 +273,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = WX6K728949;
@@ -285,6 +308,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = WX6K728949;

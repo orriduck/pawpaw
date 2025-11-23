@@ -3,7 +3,8 @@ import SwiftUI
 
 @main
 struct pawpawApp: App {
-  @State private var persistence = PersistenceController(syncEnabled: UserDefaults.standard.bool(forKey: "iCloudSyncEnabled"))
+  @State private var persistence = PersistenceController(
+    syncEnabled: UserDefaults.standard.bool(forKey: "iCloudSyncEnabled"))
 
   var body: some Scene {
     WindowGroup {

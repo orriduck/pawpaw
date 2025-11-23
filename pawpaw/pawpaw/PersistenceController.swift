@@ -1,6 +1,6 @@
 import Foundation
-import SwiftData
 import Observation
+import SwiftData
 
 @Observable
 class PersistenceController {
@@ -31,15 +31,33 @@ class PersistenceController {
 
   private static func buildContainer(syncEnabled: Bool) -> ModelContainer {
     let schema = Schema([Activity.self])
-    let configuration: ModelConfiguration
+    let modelConfiguration: ModelConfiguration
+
+    // Ensure the Application Support directory exists
+    let fileManager = FileManager.default
+    let appSupportURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)
+      .first!
+
+    do {
+      try fileManager.createDirectory(
+        at: appSupportURL, withIntermediateDirectories: true, attributes: nil)
+    } catch {
+      print("Error creating Application Support directory: \(error)")
+    }
+
+    let storeURL = appSupportURL.appendingPathComponent("pawpaw.store")
+
     if syncEnabled {
-      configuration = ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)
+      modelConfiguration = ModelConfiguration(
+        schema: schema, url: storeURL, cloudKitDatabase: .automatic)
+      print("PersistenceController: CloudKit sync enabled")
     } else {
-      configuration = ModelConfiguration(schema: schema)
+      modelConfiguration = ModelConfiguration(
+        schema: schema, url: storeURL, cloudKitDatabase: .none)
     }
 
     do {
-      return try ModelContainer(for: schema, configurations: [configuration])
+      return try ModelContainer(for: schema, configurations: [modelConfiguration])
     } catch {
       fatalError("Could not create ModelContainer: \(error)")
     }
