@@ -29,71 +29,76 @@ struct ActivityDetailView: View {
   var isNew: Bool { activity == nil }
 
   var body: some View {
-    NavigationStack {
-      Form {
-        Section("Activity Type") {
-          Picker("Type", selection: $type) {
-            ForEach(ActivityType.allCases) { type in
-              Label(type.rawValue, systemImage: type.icon)
-                .tag(type)
-            }
-          }
-          .pickerStyle(.navigationLink)
-        }
+    ZStack {
+      // Background
+      Color(UIColor.systemBackground)
+        .ignoresSafeArea()
 
-        Section("Time") {
-          DatePicker("Start Time", selection: $startTime)
-          DatePicker("End Time", selection: $endTime)
-
-          ScrollView(.horizontal, showsIndicators: false) {
+      VStack(spacing: 0) {
+        // Scrollable content
+        ScrollView {
+          VStack(spacing: 20) {
+            // Header
             HStack {
-              Button("Last 15m") { setTimeRange(minutes: 15) }
-              Button("Last 30m") { setTimeRange(minutes: 30) }
-              Button("Last 40m") { setTimeRange(minutes: 40) }
+              Text(isNew ? "New Activity" : "Edit Activity")
+                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .foregroundStyle(.primary)
+              Spacer()
             }
-            .buttonStyle(.bordered)
-          }
-          .listRowInsets(EdgeInsets())
-          .padding(.horizontal)
-          .padding(.vertical, 5)
-        }
+            .padding(.horizontal)
+            .padding(.top, 20)
 
-        Section("Notes") {
-          TextField("Add a note...", text: $note, axis: .vertical)
-            .lineLimit(3...6)
-        }
-      }
-      .navigationTitle(isNew ? "New Activity" : "Edit Activity")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          Button("Cancel") {
-            dismiss()
+            // Activity Form
+            ActivityFormView(
+              selectedType: $type,
+              startTime: $startTime,
+              endTime: $endTime,
+              note: $note
+            )
           }
         }
+        .scrollDismissesKeyboard(.interactively)
 
-        ToolbarItem(placement: .confirmationAction) {
-          Button("Save") {
-            save()
-            dismiss()
+        // Fixed bottom section
+        VStack(spacing: 0) {
+          // Action Buttons
+          HStack(spacing: 12) {
+            // Cancel Button
+            Button {
+              dismiss()
+            } label: {
+              Text("Cancel")
+                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .foregroundStyle(.primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 18)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+            }
+
+            // Confirm Button
+            Button {
+              save()
+              dismiss()
+            } label: {
+              Text("Save")
+                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 18)
+                .background(.tint)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+            }
           }
+          .padding(.horizontal, 16)
+          .padding(.bottom, 20)
         }
-      }
-      .onAppear {
-        if let activity {
-          type = activity.type
-          startTime = activity.startTime
-          endTime = activity.endTime
-          note = activity.note ?? ""
-        }
+        .background(Color(UIColor.systemBackground))
       }
     }
-  }
-
-  private func setTimeRange(minutes: Int) {
-    let now = Date()
-    endTime = now
-    startTime = now.addingTimeInterval(TimeInterval(-minutes * 60))
+    .navigationBarHidden(true)  // Hide default navigation bar to use custom header
   }
 
   private func save() {
@@ -103,27 +108,8 @@ struct ActivityDetailView: View {
       activity.startTime = startTime
       activity.endTime = endTime
       activity.note = note.isEmpty ? nil : note
-      // In SwiftData, autosave usually handles updates if the object is managed,
-      // but we can trigger a manual save on the context if needed via manager.
-      // For now, assuming the object is connected to the context.
     } else {
       // Create new
-      activityManager.addActivity(type: type, note: note.isEmpty ? nil : note)
-      // Note: We need to manually set start/end time for new activity if they differ from init defaults
-      // The addActivity method in manager is simple, let's just create it directly here or update manager.
-      // Actually, let's update the manager to handle full creation or just do it here.
-      // Since we don't have a complex manager method, let's just use what we have and update it,
-      // OR better, let's trust the manager's addActivity but we need to pass times.
-      // Let's just create a new Activity and insert it into the context via manager if possible,
-      // or just use the manager's context directly if exposed.
-      // For simplicity, I'll assume the manager can handle it or I'll add a more robust method later.
-      // Let's just use the simple add for now and update the properties immediately after if possible,
-      // but `addActivity` creates a new instance.
-      // Let's modify the manager to be more flexible in a future step if needed.
-      // For now, I will just use the simple add and rely on the fact that I can't easily set start/end in the simple add.
-      // Wait, I should probably update the manager to accept start/end time.
-      // I'll do a quick fix in the manager in the next step or just accept defaults for now.
-      // Actually, I can just create the object and insert it.
       if let context = activityManager.modelContext {
         let newActivity = Activity(
           type: type, startTime: startTime, endTime: endTime, note: note.isEmpty ? nil : note)
@@ -136,4 +122,5 @@ struct ActivityDetailView: View {
 #Preview {
   ActivityDetailView(activity: nil, type: .pee)
     .modelContainer(for: Activity.self, inMemory: true)
+    .environment(ActivityManager())
 }
